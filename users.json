@@ -1,0 +1,12 @@
+[
+  {
+    "username": "testuser",
+    "email": "test@gmail.com",
+    "password": "$2b$10$YuI9RM2LBmi2jPJrKo5cLubKv2ly6PhSrTtwb5Ri/cMtUXsu/BkAG"
+  },
+  {
+    "username": "arthur",
+    "email": "athur@gmail.co",
+    "password": "$2b$10$U/edCN/IhXyWV222ME86e.jUKydc1qbctUbkZ5uUICV7kw9o7Lw5u"
+  }
+]

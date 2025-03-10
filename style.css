@@ -1,0 +1,127 @@
+/* Styles généraux */
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: url('site-background.jpg') center/cover no-repeat fixed;
+    color: #333;
+}
+
+/* Header */
+.header {
+    background-color: rgba(34, 34, 34, 0.9);
+    padding: 15px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.header .logo {
+    font-size: 24px;
+    font-weight: 600;
+    color: #ff6f61;
+}
+.nav .nav-item .nav-link {
+    color: #fff;
+    font-weight: 400;
+    margin-left: 20px;
+    transition: color 0.3s;
+}
+.nav .nav-item .nav-link:hover {
+    color: #ff6f61;
+}
+
+/* Hero Section */
+.hero {
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: black;
+}
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: black;
+}
+.hero p {
+    font-size: 1.2rem;
+    color: black;
+}
+
+/* Upload Section */
+.section {
+    padding: 60px 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.upload-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+.status-message {
+    margin-top: 10px;
+    font-size: 1rem;
+}
+
+/* Vidéos */
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.card video {
+    width: 100%;
+    height: auto;
+}
+
+/* Footer */
+.footer {
+    background-color: rgba(34, 34, 34, 0.9);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background-color: #673AB7;
+    margin-left: 20px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0px;
+    top: 50px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.dropdown-content button {
+    background: none;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+.dropdown-content button:hover {
+    background-color: #f5f5f5;
+}
