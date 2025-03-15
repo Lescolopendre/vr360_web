@@ -167,6 +167,29 @@ app.get("/videos", authMiddleware, (req, res) => {
         res.json(videoUrls);
     });
 });
+// 🔥 ROUTE PUBLIQUE POUR AFFICHER TOUTES LES VIDÉOS DISPONIBLES
+app.get("/videos/public", (req, res) => {
+    const allVideos = [];
+
+    // Parcourir tous les dossiers utilisateurs
+    fs.readdir(VIDEOS_DIR, (err, users) => {
+        if (err) {
+            console.error("Erreur de lecture des dossiers utilisateurs :", err);
+            return res.status(500).json({ message: "❌ Erreur serveur." });
+        }
+
+        users.forEach(user => {
+            const userFolder = path.join(VIDEOS_DIR, user);
+            if (fs.statSync(userFolder).isDirectory()) {
+                fs.readdirSync(userFolder).forEach(file => {
+                    allVideos.push(`/videos/${user}/${file}`);
+                });
+            }
+        });
+
+        res.json(allVideos);
+    });
+});
 
 // 📌 **Streaming vidéo - GET /videos/:username/:filename**
 app.get("/videos/:username/:filename", (req, res) => {
@@ -177,6 +200,31 @@ app.get("/videos/:username/:filename", (req, res) => {
     }
 
     res.sendFile(filePath);
+});
+// 📌 Route pour récupérer TOUS les dossiers vidéos avec les fichiers de chaque utilisateur
+app.get("/videos", (req, res) => {
+    if (!fs.existsSync(VIDEOS_DIR)) {
+        return res.json({ message: "📁 Aucun dossier vidéo trouvé." });
+    }
+
+    fs.readdir(VIDEOS_DIR, (err, users) => {
+        if (err) {
+            return res.status(500).json({ error: "Erreur lors de la récupération des utilisateurs." });
+        }
+
+        let videoData = {};
+
+        users.forEach(user => {
+            const userPath = path.join(VIDEOS_DIR, user);
+            if (fs.lstatSync(userPath).isDirectory()) {
+                const videos = fs.readdirSync(userPath).filter(file => file.endsWith(".mp4"));
+                if (videos.length > 0) {
+                    videoData[user] = videos;
+                }
+            }
+        });
+        res.json(videoData);
+    });
 });
 
 // 🚀 **Démarrer le serveur**
