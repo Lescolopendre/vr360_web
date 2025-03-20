@@ -175,13 +175,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 videos.forEach(video => {
+                    // Extraire uniquement le nom du fichier
+                    const videoPathParts = video.split("/");
+                    const fileName = videoPathParts[videoPathParts.length - 1];
+
                     const videoElement = document.createElement("video");
                     videoElement.src = `http://localhost:3000${video}`;
                     videoElement.controls = true;
                     videoElement.width = 300;
 
                     const videoTitle = document.createElement("p");
-                    videoTitle.textContent = video;
+                    videoTitle.textContent = fileName; // Affiche seulement le nom du fichier
 
                     const videoWrapper = document.createElement("div");
                     videoWrapper.appendChild(videoTitle);
