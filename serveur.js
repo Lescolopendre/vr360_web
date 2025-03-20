@@ -9,7 +9,7 @@ require("dotenv").config();
 
 const app = express();
 const PORT = 3000;
-const SECRET_KEY = process.env.SECRET_KEY || "supersecret"; // Clé secrète pour JWT
+const SECRET_KEY = process.env.SECRET_KEY || "supersecret";
 const USERS_FILE = path.join(__dirname, "users.json");
 const VIDEOS_DIR = path.join(__dirname, "videos");
 
@@ -18,27 +18,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.static("public"));
 
-// 📂 Vérifier que le dossier principal "videos" existe
 if (!fs.existsSync(VIDEOS_DIR)) {
     fs.mkdirSync(VIDEOS_DIR, { recursive: true });
 }
 
-// 🔐 **Middleware d'authentification**
+// Middleware d'authentification
 const authMiddleware = (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "Accès non autorisé. Token manquant." });
 
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if (err) {
-            console.error("❌ Erreur JWT :", err.message);
-            return res.status(403).json({ error: "Token invalide." });
-        }
+        if (err) return res.status(403).json({ error: "Token invalide." });
         req.user = decoded;
         next();
     });
 };
 
-// 📌 **Gestion des utilisateurs**
+// Gestion des utilisateurs
 function loadUsers() {
     return fs.existsSync(USERS_FILE) ? JSON.parse(fs.readFileSync(USERS_FILE)) : [];
 }
@@ -47,7 +43,7 @@ function saveUsers(users) {
     fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-// 📌 **Inscription - POST /register**
+// Inscription
 app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
 
@@ -64,7 +60,6 @@ app.post("/register", async (req, res) => {
     users.push({ username, email, password: hashedPassword });
     saveUsers(users);
 
-    // 📂 Création automatique du dossier utilisateur
     const userDir = path.join(VIDEOS_DIR, username);
     if (!fs.existsSync(userDir)) {
         fs.mkdirSync(userDir, { recursive: true });
@@ -74,7 +69,7 @@ app.post("/register", async (req, res) => {
     res.json({ message: "✅ Inscription réussie !", token });
 });
 
-// 📌 **Connexion - POST /login**
+// Connexion
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Nom d'utilisateur et mot de passe requis." });
@@ -89,143 +84,98 @@ app.post("/login", async (req, res) => {
     res.json({ message: "✅ Connexion réussie !", token });
 });
 
-// 📂 **Configuration de Multer (Stockage dynamique)**
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const userDir = path.join(VIDEOS_DIR, req.user.username);
-
         if (!fs.existsSync(userDir)) {
             fs.mkdirSync(userDir, { recursive: true });
         }
-
         cb(null, userDir);
     },
     filename: (req, file, cb) => {
-        cb(null, file.originalname); // Nom temporaire, sera modifié après l'upload
+        cb(null, file.originalname);
     }
 });
 
-const upload = multer({ storage }).fields([
-    { name: "file", maxCount: 1 },
-    { name: "fileName", maxCount: 1 }
-]);
+const upload = multer({ storage }).single("file");
 
-// 📤 **Upload vidéo - POST /upload**
+// Upload vidéo
 app.post("/upload", authMiddleware, (req, res) => {
     upload(req, res, (err) => {
-        if (err) {
-            console.error("❌ Erreur lors de l'upload :", err.message);
-            return res.status(400).json({ message: "❌ Erreur lors de l'upload : " + err.message });
+        if (err) return res.status(400).json({ message: "❌ Erreur lors de l'upload : " + err.message });
+        if (!req.file) return res.status(400).json({ message: "❌ Aucune vidéo reçue." });
+
+        const { apartmentName, timeOfDay } = req.body;
+        if (!apartmentName || !timeOfDay ) {
+            return res.status(400).json({ message: "❌ Tous les champs doivent être remplis." });
         }
 
-        if (!req.files || !req.files.file) {
-            console.error("❌ Aucune vidéo reçue !");
-            return res.status(400).json({ message: "❌ Aucune vidéo reçue." });
+        const userDir = path.join(VIDEOS_DIR, req.user.username);
+        const apartmentDir = path.join(userDir, apartmentName);
+        if (!fs.existsSync(apartmentDir)) {
+            fs.mkdirSync(apartmentDir, { recursive: true });
         }
 
-        console.log("📩 Champs reçus :", req.body);
+        const fileExtension = path.extname(req.file.originalname);
+        const finalFileName = `${apartmentName}_${timeOfDay}${fileExtension}`;
+        const newPath = path.join(apartmentDir, finalFileName);
 
-        let fileName = req.body.fileName ? req.body.fileName.trim() : "";
-        fileName = fileName.replace(/\s+/g, "_").replace(/[^\w.-]/g, ""); // Nettoie le nom
-
-        if (!fileName) {
-            fileName = path.parse(req.files.file[0].originalname).name; // Si vide, prend le nom original sans extension
-        }
-
-        const fileExtension = path.extname(req.files.file[0].originalname);
-        const finalFileName = `${fileName}${fileExtension}`;
-
-        // 🔹 Renommer le fichier avec le bon nom de l'utilisateur
-        const oldPath = req.files.file[0].path;
-        const newPath = path.join(path.dirname(oldPath), finalFileName);
-
-        fs.rename(oldPath, newPath, (renameErr) => {
-            if (renameErr) {
-                console.error("❌ Erreur lors du renommage du fichier :", renameErr);
-                return res.status(500).json({ message: "❌ Erreur lors du renommage du fichier." });
-            }
-
-            console.log(`✅ Vidéo renommée : ${finalFileName}`);
-            res.json({ message: `✅ Vidéo "${finalFileName}" téléchargée avec succès !` });
+        fs.rename(req.file.path, newPath, (renameErr) => {
+            if (renameErr) return res.status(500).json({ message: "❌ Erreur lors du renommage du fichier." });
+            res.json({ message: `✅ Vidéo téléchargée : ${finalFileName}` });
         });
     });
 });
 
-// 📌 **Liste des vidéos d'un utilisateur - GET /videos**
+// Lister les vidéos d'un utilisateur
 app.get("/videos", authMiddleware, (req, res) => {
     const userDir = path.join(VIDEOS_DIR, req.user.username);
-
     if (!fs.existsSync(userDir)) {
-        return res.json([]); // Aucun fichier si le dossier n'existe pas
+        return res.json([]);
     }
-
-    fs.readdir(userDir, (err, files) => {
-        if (err) return res.status(500).json({ error: "Erreur lors de la récupération des fichiers" });
-
-        // Générer les URLs des vidéos de l'utilisateur
-        const videoUrls = files.map(file => `/videos/${req.user.username}/${file}`);
-        res.json(videoUrls);
-    });
-});
-// 🔥 ROUTE PUBLIQUE POUR AFFICHER TOUTES LES VIDÉOS DISPONIBLES
-app.get("/videos/public", (req, res) => {
-    const allVideos = [];
-
-    // Parcourir tous les dossiers utilisateurs
-    fs.readdir(VIDEOS_DIR, (err, users) => {
-        if (err) {
-            console.error("Erreur de lecture des dossiers utilisateurs :", err);
-            return res.status(500).json({ message: "❌ Erreur serveur." });
+    let videoList = [];
+    fs.readdirSync(userDir).forEach(apartment => {
+        const apartmentPath = path.join(userDir, apartment);
+        if (fs.lstatSync(apartmentPath).isDirectory()) {
+            const files = fs.readdirSync(apartmentPath);
+            files.forEach(file => {
+                videoList.push(`/videos/${req.user.username}/${apartment}/${file}`);
+            });
         }
-
-        users.forEach(user => {
-            const userFolder = path.join(VIDEOS_DIR, user);
-            if (fs.statSync(userFolder).isDirectory()) {
-                fs.readdirSync(userFolder).forEach(file => {
-                    allVideos.push(`/videos/${user}/${file}`);
-                });
-            }
-        });
-
-        res.json(allVideos);
     });
+    res.json(videoList);
 });
 
-// 📌 **Streaming vidéo - GET /videos/:username/:filename**
-app.get("/videos/:username/:filename", (req, res) => {
-    const filePath = path.join(VIDEOS_DIR, req.params.username, req.params.filename);
-
+// Récupérer une vidéo spécifique
+app.get("/videos/:username/:apartment/:filename", (req, res) => {
+    const filePath = path.join(VIDEOS_DIR, req.params.username, req.params.apartment, req.params.filename);
     if (!fs.existsSync(filePath)) {
         return res.status(404).json({ error: "Vidéo non trouvée" });
     }
-
     res.sendFile(filePath);
 });
-// 📌 Route pour récupérer TOUS les dossiers vidéos avec les fichiers de chaque utilisateur
-app.get("/videos", (req, res) => {
-    if (!fs.existsSync(VIDEOS_DIR)) {
-        return res.json({ message: "📁 Aucun dossier vidéo trouvé." });
+// Lister les vidéos d'un utilisateur avec son nom d'utilisateur
+app.get("/videos/:username", authMiddleware, (req, res) => {
+    const { username } = req.params;
+    if (req.user.username !== username) {
+        return res.status(403).json({ error: "Accès interdit." });
     }
 
-    fs.readdir(VIDEOS_DIR, (err, users) => {
-        if (err) {
-            return res.status(500).json({ error: "Erreur lors de la récupération des utilisateurs." });
+    const userDir = path.join(VIDEOS_DIR, username);
+    if (!fs.existsSync(userDir)) {
+        return res.json([]);
+    }
+
+    let videoList = [];
+    fs.readdirSync(userDir).forEach(apartment => {
+        const apartmentPath = path.join(userDir, apartment);
+        if (fs.lstatSync(apartmentPath).isDirectory()) {
+            const files = fs.readdirSync(apartmentPath);
+            files.forEach(file => {
+                videoList.push(`/videos/${username}/${apartment}/${file}`);
+            });
         }
-
-        let videoData = {};
-
-        users.forEach(user => {
-            const userPath = path.join(VIDEOS_DIR, user);
-            if (fs.lstatSync(userPath).isDirectory()) {
-                const videos = fs.readdirSync(userPath).filter(file => file.endsWith(".mp4"));
-                if (videos.length > 0) {
-                    videoData[user] = videos;
-                }
-            }
-        });
-        res.json(videoData);
     });
+    res.json(videoList);
 });
-
-// 🚀 **Démarrer le serveur**
 app.listen(PORT, () => console.log(`🚀 Serveur en cours d'exécution sur http://localhost:${PORT}`));

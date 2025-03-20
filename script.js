@@ -109,9 +109,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (uploadForm) {
         uploadForm.addEventListener("submit", async (e) => {
             e.preventDefault();
+
             const fileInput = document.getElementById("file-upload");
-            const fileNameInput = document.getElementById("file-name");
-            const fileName = fileNameInput.value.trim();
+            const apartmentNameInput = document.getElementById("apartment-name");
+            const timeOfDaySelect = document.getElementById("time-of-day");
             const token = localStorage.getItem("token");
 
             if (!token) {
@@ -119,30 +120,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (!fileInput.files.length) {
-                alert("❌ Veuillez sélectionner un fichier.");
-                return;
-            }
-
-            if (!fileName) {
-                alert("❌ Veuillez entrer un nom pour le fichier.");
+            if (!fileInput.files.length || !apartmentNameInput.value.trim() || !timeOfDaySelect.value) {
+                alert("❌ Tous les champs doivent être remplis.");
                 return;
             }
 
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
-            formData.append("fileName", fileName);
+            formData.append("apartmentName", apartmentNameInput.value.trim());
+            formData.append("timeOfDay", timeOfDaySelect.value);
+
+            console.log("📤 Données envoyées :");
+            for (let pair of formData.entries()) {
+                console.log(`${pair[0]}:`, pair[1]);
+            }
 
             try {
                 const response = await fetch("http://localhost:3000/upload", {
                     method: "POST",
-                    headers: { "Authorization": `Bearer ${token}` },
+                    headers: { "Authorization": `Bearer ${token}` }, // ✅ PAS DE `Content-Type`
                     body: formData
                 });
 
                 const result = await response.json();
                 document.getElementById("upload-status").textContent = result.message;
-                loadVideos();
             } catch (error) {
                 console.error("❌ Erreur lors de l'upload :", error);
                 document.getElementById("upload-status").textContent = "❌ Échec de l'upload.";

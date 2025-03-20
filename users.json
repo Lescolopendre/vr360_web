@@ -8,5 +8,15 @@
     "username": "arthur",
     "email": "athur@gmail.co",
     "password": "$2b$10$U/edCN/IhXyWV222ME86e.jUKydc1qbctUbkZ5uUICV7kw9o7Lw5u"
+  },
+  {
+    "username": "ezr",
+    "email": "sdf@g.com",
+    "password": "$2b$10$y74VOiUiDQXYfNGFMhDneeTHlu.KQsOl0PiZ5IbxWfuWg29ztbw2y"
+  },
+  {
+    "username": "fabien",
+    "email": "fabien@g.com",
+    "password": "$2b$10$21/2VFTyKS36USrVN6MPdefbzNoHESyUgPUeyoss7E5eS90GCQrx2"
   }
 ]

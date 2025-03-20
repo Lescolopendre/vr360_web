@@ -50,14 +50,19 @@
     <div class="container text-center">
         <h2>📤 Charger une Vidéo 360°</h2>
         <form id="upload-form" class="upload-box">
-            <input type="text" id="file-name" class="form-control mb-2" placeholder="Nom du fichier (sans extension)" required>
+            <input type="text" id="apartment-name" class="form-control mb-2" placeholder="Nom de l'appartement" required>
+            <select id="time-of-day" class="form-control mb-2" required>
+                <option value="" disabled selected>Choisir le moment de la journée</option>
+                <option value="matin">Matin</option>
+                <option value="midi">Midi</option>
+                <option value="soir">Soir</option>
+            </select>
             <input type="file" id="file-upload" accept="video/*" class="form-control mb-3" required>
             <button type="submit" class="btn btn-primary">Télécharger</button>
         </form>
         <p id="upload-status" class="status-message mt-3"></p>
     </div>
 </section>
-
 
 <!-- VIDEO GALLERY -->
 <section id="videos" class="section bg-light">
